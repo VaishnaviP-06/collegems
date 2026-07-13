@@ -30,22 +30,7 @@ export default function MainDashboard() {
   const [searchTerm] = useState("");
   const { darkMode, toggleTheme } = useTheme();
   const [showSuggestions] = useState(false);
-<<<<<<< HEAD
-  const { notifications, unreadCount, markAsRead } = useNotifications();
-=======
   const { notifications, markAsRead } = useNotifications();
-  
-  const dashboardCards = [
-    { id: 1, title: "Academic Results", description: "View your semester grades and performance", icon: FileText, count: "4 Subjects", color: "blue", route: "/results" },
-    { id: 2, title: "Examination Schedule", description: "Upcoming exams dates and venues", icon: Calendar, count: "2 Upcoming", color: "amber", route: "/examschedule" },
-    { id: 3, title: "Course Catalog", description: "Browse and manage your enrolled courses", icon: BookOpen, count: "6 Enrolled", color: "emerald", route: "/courses" },
-    { id: 4, title: "Campus Events", description: "Upcoming activities and events", icon: Bell, count: "3 New", color: "purple", route: "/events" },
-    { id: 5, title: "Class Schedule", description: "Daily timetable and class details", icon: Clock, count: "This Week", color: "rose", route: "/timetable" },
-    { id: 6, title: "Faculty Directory", description: "Connect with your professors", icon: Users, count: "12 Teachers", color: "cyan", route: "/faculty" },
-    { id: 7, title: "Library Catalog", description: "Manage and borrow books from the library", icon: Library, count: "Explore", color: "emerald", route: "/library" },
-    { id: 8, title: "Academic Calendar", description: "View academic events, exams and holidays", icon: CalendarDays, count: "Important Dates", color: "blue", route: "/calendar" },
-  ];
->>>>>>> 14ed0ec82af587d74fbf314bbacf23f6d4523fa0
 
   const dashboardCards = [
     {
@@ -112,18 +97,20 @@ export default function MainDashboard() {
       route: "/library",
     },
     {
-  id: 8,
-  title: "Academic Calendar",
-  description: "View academic events, exams and holidays",
-  icon: CalendarDays,
-  count: "Important Dates",
-  color: "blue",
-  route: "/calendar",
-},
+      id: 8,
+      title: "Academic Calendar",
+      description: "View academic events, exams and holidays",
+      icon: CalendarDays,
+      count: "Important Dates",
+      color: "blue",
+      route: "/calendar",
+    },
   ];
-  const filteredCards =dashboardCards.filter((card) =>
-  card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  card.description.toLowerCase().includes(searchTerm.toLowerCase())
+
+  const filteredCards = dashboardCards.filter(
+    (card) =>
+      card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      card.description.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const quickStats = [
@@ -134,18 +121,18 @@ export default function MainDashboard() {
   ];
 
   const colorClasses = {
-    blue:    { bg: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-200",    icon: "text-blue-600",    hover: "hover:border-blue-300",    light: "bg-blue-100" },
-    amber:   { bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200",   icon: "text-amber-600",   hover: "hover:border-amber-300",   light: "bg-amber-100" },
+    blue: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", icon: "text-blue-600", hover: "hover:border-blue-300", light: "bg-blue-100" },
+    amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: "text-amber-600", hover: "hover:border-amber-300", light: "bg-amber-100" },
     emerald: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: "text-emerald-600", hover: "hover:border-emerald-300", light: "bg-emerald-100" },
-    purple:  { bg: "bg-purple-50",  text: "text-purple-700",  border: "border-purple-200",  icon: "text-purple-600",  hover: "hover:border-purple-300",  light: "bg-purple-100" },
-    rose:    { bg: "bg-rose-50",    text: "text-rose-700",    border: "border-rose-200",    icon: "text-rose-600",    hover: "hover:border-rose-300",    light: "bg-rose-100" },
-    cyan:    { bg: "bg-cyan-50",    text: "text-cyan-700",    border: "border-cyan-200",    icon: "text-cyan-600",    hover: "hover:border-cyan-300",    light: "bg-cyan-100" },
+    purple: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", icon: "text-purple-600", hover: "hover:border-purple-300", light: "bg-purple-100" },
+    rose: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", icon: "text-rose-600", hover: "hover:border-rose-300", light: "bg-rose-100" },
+    cyan: { bg: "bg-cyan-50", text: "text-cyan-700", border: "border-cyan-200", icon: "text-cyan-600", hover: "hover:border-cyan-300", light: "bg-cyan-100" },
   };
 
   return (
     <div>
       <>
-        {/*input box */}
+        {/* input box (kept commented out as in source) */}
         {/* <input
         value={searchTerm}
         onChange={(e)=> {
@@ -268,7 +255,6 @@ export default function MainDashboard() {
               );
             })}
           </div>
-<<<<<<< HEAD
 
           {/* Quick Access Cards */}
           <div className="mb-8">
@@ -291,6 +277,7 @@ export default function MainDashboard() {
                 const colors =
                   colorClasses[card.color as keyof typeof colorClasses];
                 const isHovered = hoveredCard === card.id;
+
                 return (
                   <button
                     key={card.id}
@@ -302,38 +289,19 @@ export default function MainDashboard() {
                     <div className="flex items-start justify-between mb-4">
                       <div className={`p-3 rounded-lg ${colors.bg}`}>
                         <Icon className={`w-6 h-6 ${colors.icon}`} />
-=======
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-gray-500 dark:text-gray-400" /> Important Notifications
-                </h3>
-              </div>
-              <div className="space-y-4">
-                {notifications.length > 0 ? (
-                  notifications.map((notif) => {
-                    const isDanger = notif.type === "danger";
-                    return (
-                      <div key={notif._id} className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${isDanger ? "border-red-200 bg-red-50 dark:bg-red-900/20" : "border-blue-200 bg-blue-50 dark:bg-blue-900/20"}`}>
-                        <div className={`p-2 rounded-lg ${isDanger ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}><AlertCircle className="w-5 h-5" /></div>
-                        <div className="flex-1">
-                          <h4 className={`font-medium ${isDanger ? "text-red-800" : "text-blue-800"}`}>{notif.message}</h4>
-                        </div>
->>>>>>> 14ed0ec82af587d74fbf314bbacf23f6d4523fa0
                       </div>
+
                       <span
                         className={`text-xs font-medium px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}
                       >
                         {card.count}
                       </span>
                     </div>
+
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
                       {card.title}
                     </h3>
+
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {card.description}
                     </p>
@@ -343,7 +311,6 @@ export default function MainDashboard() {
             </div>
           </div>
 
-<<<<<<< HEAD
           <RecentHistorySection />
 
           {/* Bottom Section */}
@@ -400,23 +367,6 @@ export default function MainDashboard() {
                   ) : (
                     <div className="text-center py-6 text-gray-500">
                       No new notifications right now.
-=======
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                <CalendarDays className="w-5 h-5 text-gray-500 dark:text-gray-400" /> Upcoming Events
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { title: "Tech Symposium", date: "Dec 15", color: "blue" },
-                  { title: "Sports Meet", date: "Dec 18", color: "amber" },
-                ].map((event, index) => {
-                  const colors = colorClasses[event.color as keyof typeof colorClasses] || colorClasses.blue;
-                  return (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{event.title}</span>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}>{event.date}</span>
->>>>>>> 14ed0ec82af587d74fbf314bbacf23f6d4523fa0
                     </div>
                   )}
                 </div>
@@ -460,7 +410,6 @@ export default function MainDashboard() {
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Footer */}
         <footer className="mt-12 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -510,77 +459,6 @@ export default function MainDashboard() {
                   FAQ
                 </a>
               </div>
-=======
-        <RecentHistorySection />
-
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8 mb-8">
-          {/* Notifications */}
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  Important Notifications
-                </h3>
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  View All
-                </button>
-              </div>
-              <div className="space-y-4">
-                {notifications.length > 0 ? (
-                  notifications.map((notif) => {
-                    const isDanger = notif.type === "danger";
-                    return (
-                      <div
-                        key={notif._id}
-                        onClick={() => !notif.isRead && markAsRead(notif._id)}
-                        className={`flex items-start gap-4 p-4 rounded-lg border transition-colors cursor-pointer ${isDanger ? "border-red-200 bg-red-50 dark:bg-red-900/20" : "border-blue-200 bg-blue-50 dark:bg-blue-900/20"} ${!notif.isRead ? "shadow-sm" : "opacity-70"}`}
-                      >
-                        <div
-                          className={`p-2 rounded-lg ${isDanger ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}
-                        >
-                          <AlertCircle className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h4
-                                className={`font-medium ${isDanger ? "text-red-800" : "text-blue-800"}`}
-                              >
-                                {notif.message}
-                              </h4>
-                            </div>
-                            <span
-                              className={`text-xs font-medium px-2 py-1 rounded-full ${isDanger ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
-                            >
-                              {formatDistanceToNow(
-                                new Date(notif.createdAt),
-                                { addSuffix: true },
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    No new notifications right now.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ISSUE #128: NEW VISION & MISSION LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600"><Target size={22} /></div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Our Vision</h3>
->>>>>>> 14ed0ec82af587d74fbf314bbacf23f6d4523fa0
             </div>
           </div>
         </footer>
