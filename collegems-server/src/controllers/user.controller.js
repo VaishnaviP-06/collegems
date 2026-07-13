@@ -394,6 +394,124 @@ export const unlockAcademicRecord = async (req, res) => {
     });
   }
 };
+export const createUser = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      role,
+      studentId,
+      teacherId,
+      department,
+      departmentCode,
+      semester,
+      course,
+      childStudentId,
+      phone,
+      dob,
+    } = req.body || {};
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const ALLOWED_ROLES = ["student", "teacher", "parent", "hod", "admin"];
+    if (!ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ message: "Invalid user role" });
+    }
+
+    const COLLEGE_DOMAIN = process.env.COLLEGE_DOMAIN || "";
+    const emailNorm = email.trim().toLowerCase();
+
+    // Check institutional email domain for privileged roles
+    if (role === "hod" || role === "admin") {
+      if (COLLEGE_DOMAIN && !emailNorm.endsWith(`@${COLLEGE_DOMAIN.toLowerCase()}`)) {
+        return res.status(400).json({
+          message: `Email must belong to domain ${COLLEGE_DOMAIN}`,
+        });
+      }
+    }
+
+    // Role-specific validation
+    let userData = {
+      name,
+      email: emailNorm,
+      password: await hashPassword(password, 8),
+      role,
+      phone,
+      dob,
+    };
+
+    if (role === "student") {
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID required" });
+      }
+      if (!semester || !course) {
+        return res.status(400).json({ message: "Semester and course required for student" });
+      }
+      userData = { ...userData, studentId, semester, course };
+    }
+
+    else if (role === "teacher") {
+      if (!teacherId) {
+        return res.status(400).json({ message: "Teacher ID required" });
+      }
+      if (!department) {
+        return res.status(400).json({ message: "Department required" });
+      }
+      userData = { ...userData, teacherId, department };
+    }
+
+    else if (role === "parent") {
+      if (!childStudentId) {
+        return res.status(400).json({ message: "Child's Student ID required" });
+      }
+      const student = await User.findOne({ studentId: childStudentId, role: "student" });
+      if (!student) {
+        return res.status(404).json({ message: "Student with this ID does not exist" });
+      }
+      userData = { ...userData, childId: student._id };
+    }
+
+    else if (role === "hod") {
+      if (!departmentCode) {
+        return res.status(400).json({ message: "Department code required for HOD" });
+      }
+      const VALID_DEPARTMENT_CODES = ["CSE", "ECE", "ME", "EE", "CE", "MATH", "PHY", "BUS", "CS", "IT"];
+      if (!VALID_DEPARTMENT_CODES.includes(departmentCode.toUpperCase())) {
+        const existsInDB = await User.exists({ departmentCode: departmentCode.toUpperCase() });
+        if (!existsInDB) {
+          return res.status(400).json({ message: "Invalid or unauthorized department code" });
+        }
+      }
+      userData = { ...userData, departmentCode: departmentCode.toUpperCase() };
+    }
+
+    // Check existing user strictly by email
+    const exists = await User.findOne({ email: emailNorm });
+    if (exists) {
+      return res.status(400).json({ message: "User already exists with this email" });
+    }
+
+    const user = await User.create(userData);
+
+    res.status(201).json({
+      message: "User created successfully",
+      user: { id: user._id, name: user.name, role: user.role, email: user.email },
+    });
+
+    // Log action
+    await logAction(req.user.id, "ADMIN_CREATE_USER", "User", user._id, {
+      role: user.role,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Server error creating user" });
+  }
+};
+
 export const createTeacher = async (req, res) => {
   try {
     const {

@@ -1,39 +1,298 @@
-
 import test from "node:test";
-import assert from "node:assert/strict";
+import assert from "node:assert";
+import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import request from "supertest";
+import app from "../app.js";
+import User from "../models/User.model.js";
+import jwt from "jsonwebtoken";
 import { validateRegister } from "../middlewares/validation.middleware.js";
 
-const runValidation = async (body) => {
-  const req = { body };
+test("Authentication and Registration Flow Tests", async (t) => {
+  let mongoServer;
+  let adminToken;
+  let teacherToken;
+  let studentUser;
+  const jwtSecret = "testsecret";
 
-  const res = {
-    statusCode: undefined,
-    payload: undefined,
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-    json(payload) {
-      this.payload = payload;
-      return this;
-    },
-  };
+  t.before(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
 
-  let nextCalled = false;
+    // Provide secrets to app
+    process.env.JWT_SECRET = jwtSecret;
+    process.env.JWT_REFRESH_SECRET = jwtSecret;
 
-  const next = () => {
-    nextCalled = true;
-  };
+    // Create an Admin user
+    const adminUser = await User.create({
+      name: "Admin User",
+      email: "admin@test.com",
+      password: "Password123!",
+      role: "admin",
+    });
+    adminToken = jwt.sign({ id: adminUser._id, role: adminUser.role }, jwtSecret);
 
-  for (const middleware of validateRegister) {
-    await middleware(req, res, next);
+    // Create a Teacher user
+    const teacherUser = await User.create({
+      name: "Teacher User",
+      email: "teacher@test.com",
+      password: "Password123!",
+      role: "teacher",
+      teacherId: "T-9999",
+      department: "Mathematics",
+    });
+    teacherToken = jwt.sign({ id: teacherUser._id, role: teacherUser.role }, jwtSecret);
 
-    if (res.statusCode === 400) {
-      break;
+    // Create a student for parent registration testing
+    studentUser = await User.create({
+      name: "Student User",
+      email: "student@test.com",
+      password: "Password123!",
+      role: "student",
+      studentId: "STU-1234",
+      semester: "1",
+      course: "BCA",
+    });
+  });
+
+  t.after(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  await t.test("Public Registration: Student should be able to register successfully", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "New Student",
+        email: "newstudent@test.com",
+        password: "Password123!",
+        role: "student",
+        studentId: "STU-8888",
+        semester: "1",
+        course: "BCA",
+      });
+
+    assert.strictEqual(res.status, 201);
+    assert.strictEqual(res.body.message, "Registered successfully. Please check your email to verify your account.");
+    assert.strictEqual(res.body.user.role, "student");
+  });
+
+  await t.test("Public Registration: Teacher should be able to register successfully", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "New Teacher",
+        email: "newteacher@test.com",
+        password: "Password123!",
+        role: "teacher",
+        teacherId: "T-7777",
+        department: "Computer Science",
+      });
+
+    assert.strictEqual(res.status, 201);
+    assert.strictEqual(res.body.message, "Registered successfully. Please check your email to verify your account.");
+    assert.strictEqual(res.body.user.role, "teacher");
+  });
+
+  await t.test("Public Registration: Parent should be able to register successfully", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "New Parent",
+        email: "newparent@test.com",
+        password: "Password123!",
+        role: "parent",
+        studentId: "STU-1234",
+        childStudentId: "STU-1234",
+        overrideDuplicates: true,
+      });
+
+    assert.strictEqual(res.status, 201);
+    assert.strictEqual(res.body.message, "Registered successfully. Please check your email to verify your account.");
+    assert.strictEqual(res.body.user.role, "parent");
+  });
+
+  await t.test("Public Registration: HOD registration must be rejected", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "Malicious HOD",
+        email: "malhod@test.com",
+        password: "Password123!",
+        role: "hod",
+        departmentCode: "CSE",
+      });
+
+    assert.ok(res.status === 400 || res.status === 403);
+  });
+
+  await t.test("Public Registration: Admin registration must be rejected", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "Malicious Admin",
+        email: "maladmin@test.com",
+        password: "Password123!",
+        role: "admin",
+      });
+
+    assert.ok(res.status === 400 || res.status === 403);
+  });
+
+  await t.test("Admin User Creation: Admin should be able to create HOD account", async () => {
+    const res = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Authorized HOD",
+        email: "authhod@test.com",
+        password: "Password123!",
+        role: "hod",
+        departmentCode: "CSE",
+      });
+
+    assert.strictEqual(res.status, 201);
+    assert.strictEqual(res.body.message, "User created successfully");
+    assert.strictEqual(res.body.user.role, "hod");
+  });
+
+  await t.test("Admin User Creation: Non-admin (teacher) should be forbidden from creating HOD account", async () => {
+    const res = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${teacherToken}`)
+      .send({
+        name: "HOD Created By Teacher",
+        email: "teacherhod@test.com",
+        password: "Password123!",
+        role: "hod",
+        departmentCode: "CSE",
+      });
+
+    assert.strictEqual(res.status, 403);
+  });
+
+  await t.test("Admin User Creation: Unauthenticated request should be unauthorized", async () => {
+    const res = await request(app)
+      .post("/api/users")
+      .send({
+        name: "Unauth HOD",
+        email: "unauthhod@test.com",
+        password: "Password123!",
+        role: "hod",
+        departmentCode: "CSE",
+      });
+
+    assert.strictEqual(res.status, 401);
+  });
+
+  await t.test("Admin User Creation: Validate institutional email domain", async () => {
+    const originalDomain = process.env.COLLEGE_DOMAIN;
+    process.env.COLLEGE_DOMAIN = "college.edu";
+
+    try {
+      // 1. Invalid domain should fail
+      const resFail = await request(app)
+        .post("/api/users")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: "Invalid Domain HOD",
+          email: "hod@gmail.com",
+          password: "Password123!",
+          role: "hod",
+          departmentCode: "CSE",
+        });
+
+      assert.strictEqual(resFail.status, 400);
+      assert.ok(resFail.body.message.includes("Email must belong to domain"));
+
+      // 2. Valid domain should succeed
+      const resSuccess = await request(app)
+        .post("/api/users")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: "Valid Domain HOD",
+          email: "hod@college.edu",
+          password: "Password123!",
+          role: "hod",
+          departmentCode: "CSE",
+        });
+
+      assert.strictEqual(resSuccess.status, 201);
+    } finally {
+      if (originalDomain === undefined) {
+        delete process.env.COLLEGE_DOMAIN;
+      } else {
+        process.env.COLLEGE_DOMAIN = originalDomain;
+      }
     }
-  }
+  });
 
-  return { res, nextCalled };
+  await t.test("Admin User Creation: Validate department code", async () => {
+    // CSE is valid (standard whitelist)
+    const resSuccess = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Valid CSE HOD",
+        email: "csehod@test.com",
+        password: "Password123!",
+        role: "hod",
+        departmentCode: "CSE",
+      });
+    assert.strictEqual(resSuccess.status, 201);
+
+    // XYZ is invalid (not in whitelist, and doesn't exist in DB)
+    const resFail = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Invalid XYZ HOD",
+        email: "xyzhod@test.com",
+        password: "Password123!",
+        role: "hod",
+        departmentCode: "XYZ",
+      });
+    assert.strictEqual(resFail.status, 400);
+    assert.ok(resFail.body.message.includes("Invalid or unauthorized department code"));
+  });
+});
+
+// Validation middleware tests
+const runValidation = (body) => {
+  return new Promise((resolve, reject) => {
+    const req = { body };
+    const res = {
+      statusCode: undefined,
+      payload: undefined,
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(payload) {
+        this.payload = payload;
+        resolve({ res: this, nextCalled: false });
+        return this;
+      },
+    };
+
+    let index = 0;
+    const next = (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      index++;
+      if (index < validateRegister.length) {
+        validateRegister[index](req, res, next);
+      } else {
+        resolve({ res, nextCalled: true });
+      }
+    };
+
+    validateRegister[0](req, res, next);
+  });
 };
 
 test("register validation accepts a strong password", async () => {
@@ -88,5 +347,3 @@ test("register validation rejects missing password", async () => {
   assert.equal(res.statusCode, 400);
   assert.equal(nextCalled, false);
 });
-
-

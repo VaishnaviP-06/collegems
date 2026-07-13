@@ -15,6 +15,7 @@ import {
   getStudentProfile,
   bulkAssignTags,
   unlockAcademicRecord,
+  createUser,
   createTeacher,
 } from "../controllers/user.controller.js";
 import { getCleanupSuggestions } from "../services/userCleanup.service.js";
@@ -23,6 +24,7 @@ import { auditAction } from "../middlewares/audit.middleware.js";
 
 const router = express.Router();
 
+router.post("/", protect, authorize("admin"), createUser);
 router.get("/me", protect, getMe);
 router.put("/me", protect, authorize("teacher", "hod"), auditAction("UPDATE_PROFILE", "User"), updateMe);
 router.put(

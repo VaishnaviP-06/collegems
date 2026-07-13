@@ -26,10 +26,12 @@ dist-ssr
 
 # User-uploaded files (never commit user data). The runtime creates these
 # directories on demand; the .gitkeep files preserve the empty folders.
-uploads/*
-!uploads/.gitkeep
-secure-uploads/*
-!secure-uploads/.gitkeep
+uploads/**
+!uploads/**/
+!uploads/**/.gitkeep
+secure-uploads/**
+!secure-uploads/**/
+!secure-uploads/**/.gitkeep
 
 # Local developer scratch space
 scratch/

@@ -27,9 +27,8 @@ export const validateRegister = [
     .escape(),
 
   body("role")
-    .isIn(["student", "teacher", "parent", "hod"])
-    .withMessage("Role must be one of: student, teacher, parent, hod"),
-
+    .isIn(["student", "teacher", "parent"])
+    .withMessage("Role must be one of: student, teacher, parent"),
   (req, res, next) => {
     const errors = validationResult(req);
 

@@ -17,4 +17,8 @@
     "@commitlint/config-conventional": "^19.8.1",
     "husky": "^9.1.7"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 14ed0ec82af587d74fbf314bbacf23f6d4523fa0

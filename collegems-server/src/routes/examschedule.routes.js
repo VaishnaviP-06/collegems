@@ -145,6 +145,39 @@ router.delete(
 );
 
 router.get(
+  "/upcoming",
+  protect,
+  asyncHandler(async (req, res) => {
+    const days = parseInt(req.query.days, 10) || 14;
+    const course = req.user.course;
+
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + days);
+
+    const formatDate = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = formatDate(today);
+    const futureStr = formatDate(futureDate);
+
+    const schedules = await ExamSchedule.find({
+      course,
+      examDate: {
+        $gte: todayStr,
+        $lte: futureStr
+      }
+    }).sort({ examDate: 1 });
+
+    res.json({ success: true, data: schedules });
+  })
+);
+
+router.get(
   "/all",
   protect,
   allowRoles("student", "teacher", "admin", "hod", "parent"),

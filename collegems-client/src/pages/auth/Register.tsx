@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import {
-  User, Mail, Lock, GraduationCap, Users, Shield, Building2,
-  Hash, ChevronRight, ArrowLeft, School, Briefcase, IdCard,
+  User, Mail, Lock, GraduationCap, Users, Building2,
+  ChevronRight, ArrowLeft, School, Briefcase, IdCard,
   Moon, Sun, AlertTriangle, X
 } from "lucide-react";
 import api from "../../api/axios";
@@ -26,6 +26,9 @@ export default function Register() {
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
+    if (e.target.name === "password") {
+      setPasswordStrength(getPasswordStrength(e.target.value));
+    }
   };
 
     // Add this after handleChange function
@@ -99,7 +102,6 @@ export default function Register() {
     { value: "student", label: "Student", icon: GraduationCap, color: "blue", description: "Access courses, assignments, and grades" },
     { value: "teacher", label: "Teacher", icon: Users, color: "amber", description: "Manage classes, assignments, and attendance" },
     { value: "parent", label: "Parent", icon: Users, color: "purple", description: "Monitor your child's academic progress" },
-    { value: "hod", label: "HOD", icon: Shield, color: "emerald", description: "Oversee department and faculty" },
   ];
 
   const getRoleColor = (roleValue: string) => {
@@ -206,14 +208,14 @@ export default function Register() {
              <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-4 w-4 text-gray-400" /></div>
               <input id="password" name="password" type={showPassword ? "text" : "password"} value={form.password || ""} onChange={handleChange} disabled={loading} className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`} placeholder="••••••••" />
-                <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                 {showPassword ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
-                </button>
+                 <button
+                     type="button"
+                     onClick={handleTogglePassword}
+                     disabled={loading}
+                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                  {showPassword ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
+                 </button>
               </div>
                 
               {/* Password Strength Indicator */}
@@ -321,25 +323,7 @@ export default function Register() {
               </div>
             )}
 
-            {/* HOD Fields */}
-            {role === "hod" && (
-              <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-emerald-600" /> HOD Information
-                </h3>
-                <div>
-                  <label htmlFor="departmentCode" className={labelClass}>Department Code *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Hash className="h-4 w-4 text-gray-400" /></div>
-                    <input id="departmentCode" name="departmentCode" value={form.departmentCode || ""} onChange={handleChange} className={inputClass} placeholder="CS001" />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="experience" className={labelClass}>Years of Experience</label>
-                  <input id="experience" name="experience" type="number" value={form.experience || ""} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" placeholder="10" />
-                </div>
-              </div>
-            )}
+
 
             {/* Parent Fields */}
             {role === "parent" && (
