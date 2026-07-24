@@ -46,6 +46,8 @@ import officeHoursRoutes from "./routes/officeHours.routes.js";
 import examHallRoutes from "./routes/examHall.routes.js";
 import hallAllocationRoutes from "./routes/hallAllocation.routes.js";
 import Tenant from "./models/Tenant.model.js";
+import reminderRoutes from "./routes/reminder.routes.js";
+import { startReminderCron } from "./cron/reminder.cron.js";
 // Apply Global Multi-Tenant Plugin
 import tenantPlugin from "./utils/tenantPlugin.js";
 mongoose.plugin(tenantPlugin);
@@ -59,7 +61,6 @@ import tenantResolver from "./middlewares/tenantResolver.js";
 import log from "./utils/logger.js";
 import cookieParser from "cookie-parser";
 import { allowedOrigins } from "./config/cors.js";
-
 const app = express();
 app.set("query parser", "extended");
 
@@ -105,6 +106,7 @@ app.get("/", (_req, res) => res.send("SCMS Backend Running 🚀"));
 // ========================================
 // Fixed ReferenceError: changed 'router.use' to 'app.use'
 app.use('/analytics', analyticsRoutes);
+app.use("/api/reminders", reminderRoutes); // <-- Paste it right here!
 app.use("/api", apiRouter);
 
 // ========================================
@@ -153,4 +155,5 @@ mongoose.connection.once('open', async () => {
   }
 });
 
+startReminderCron();
 export default app;

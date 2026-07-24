@@ -48,7 +48,7 @@ import { SequenceRepair } from "../common-components-management/SequenceRepair";
 import FormAbandonmentStats from "../hod-components/FormAbandonmentStats";
 import WorkflowAdmin from "../hod-components/WorkflowAdmin";
 import WorkflowApprovals from "../hod-components/WorkflowApprovals";
-
+import ReminderManagement from "../common-components-management/ReminderManagement";
 // Pages
 import RiskDashboard from "./RiskDashboard";
 import AttendanceAlertsWidget from "../teacher-components/AttendanceAlertsWidget";
@@ -92,7 +92,8 @@ type TabType =
   | "form-insights"
   | "department-analytics"
   | "workflow-admin"
-  | "workflow-approvals";
+  | "workflow-approvals"
+  | "reminders";
 
 interface Data {
   cards: Array<{ title: string; value: number }>;
@@ -177,6 +178,7 @@ export default function HODDashboard() {
     { id: "workflow-admin" as TabType, label: "Workflow Builder", icon: Settings },
     { id: "workflow-approvals" as TabType, label: "Pending Approvals", icon: Activity },
     { id: "department-analytics" as TabType, label: "Department Analytics", icon: LayoutGrid },
+    { id: "reminders" as TabType, label: "Profile Reminders", icon: Bell },
   ];
 
   // Fetch data on mount
@@ -579,6 +581,7 @@ export default function HODDashboard() {
         { activeTab === "workflow-admin" && <WorkflowAdmin /> }
         { activeTab === "workflow-approvals" && <WorkflowApprovals /> }
         { activeTab === "department-analytics" && <HodAnalyticsWidget /> }
+        { activeTab === "reminders" && <ReminderManagement /> }
       </>
     );
   };
