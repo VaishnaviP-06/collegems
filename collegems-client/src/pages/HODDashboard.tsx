@@ -55,7 +55,7 @@ import AttendanceAlertsWidget from "../teacher-components/AttendanceAlertsWidget
 import TrackingWidget from "../hod-components/TrackingWidget";
 import SystemHealthDashboard from "../hod-components/SystemHealthDashboard";
 import HodAnalyticsWidget from "../components/AnalyticsWidgets/HodAnalyticsWidget";
-
+import LiveTrafficWidget from '../hod-components/LiveTrafficWidget';
 type TabType =
   | "overview"
   | "analytics"
@@ -526,6 +526,7 @@ export default function HODDashboard() {
             <div className="space-y-6">
               <AttendanceAlertsWidget />
               <TrackingWidget />
+              <LiveTrafficWidget />
             </div>
           </div>
         </div>

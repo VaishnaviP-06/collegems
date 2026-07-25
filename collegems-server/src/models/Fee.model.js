@@ -1,23 +1,17 @@
 import mongoose from "mongoose";
 
-const installmentSchema = new mongoose.Schema(
-  {
-    amount: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    paidOn: {
-      type: Date,
-      default: Date.now,
-    },
-    idempotencyKey: {
-      type: String,
-    },
+const installmentSchema = new mongoose.Schema({
+  amount: {
+    type: Number,
+    required: true,
+    min: 0,
   },
   paidOn: {
     type: Date,
     default: Date.now,
+  },
+  idempotencyKey: {
+    type: String,
   },
   // Payments submitted by a student/parent start as "pending" and only
   // count toward `paid` once a staff member (hod) confirms them - see
@@ -78,7 +72,7 @@ const feeSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 /* Virtual: remaining amount */

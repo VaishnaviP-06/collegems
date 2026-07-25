@@ -15,10 +15,6 @@ import { initializeStudyGroupSockets } from "../socket/studyGroupSocket.js";
 import { allowedOrigins } from "../config/cors.js";
 import { registerProcessErrorHandlers } from "../utils/processErrorHandlers.js";
 import helmet from "helmet";
-registerProcessErrorHandlers();
-
-
-
 
 // ✅ REGISTER ERROR HANDLERS - SABSE PEHLE
 registerProcessErrorHandlers();
@@ -76,7 +72,6 @@ export const initializeApp = () => {
 
   const httpServer = createServer(app);
 
-  // ⚠️ SOCKET.IO CODE BILKUL WAISA HI RAKHA GAYA HAI, KOI BHI CHANGE NAHI KIYA
   const io = new Server(httpServer, {
     cors: {
       origin: (origin, callback) => {
@@ -107,17 +102,53 @@ export const initializeApp = () => {
     }
   });
 
-  io.on("connection", (socket) => {
-    const userId = socket.user?.id || socket.user?._id;
-    if (userId) {
-      socket.join(`user_${userId}`);
-      console.log(`User connected to socket: ${userId}`);
+  // --- LIVE TRAFFIC TRACKING LOGIC ---
+  const activeUsers = new Map();
+const broadcastLiveStats = (ioInstance) => {
+    const stats = { students: 0, teachers: 0 };
+    
+    for (const [socketId, data] of activeUsers.entries()) {
+      const role = data.role?.toLowerCase();
+      if (role === 'student') stats.students++;
+      if (role === 'teacher') stats.teachers++;
     }
+    
+    // 🔥 CHANGED: Temporarily emit to EVERYONE instead of just .to('hod')
+    ioInstance.emit('live_traffic_update', stats);
+  };
+io.on("connection", (socket) => {
+    console.log(`\n🚨🚨🚨 BOOTSTRAP SOCKET CONNECTED! 🚨🚨🚨`);
+    console.log(`Socket ID: ${socket.id}`);
+    console.log(`Raw User Object from Token:`, socket.user); // Let's see EXACTLY what the token holds!
+
+    const userId = socket.user?.id || socket.user?._id;
+    const userRole = socket.user?.role || socket.user?.userType || 'UNKNOWN_ROLE'; 
+
+    // 1. Join Individual Room
+    if (userId) socket.join(`user_${userId}`);
+    
+    // 2. Join Role Room
+    socket.join(userRole.toLowerCase()); 
+
+    // 3. Track User in Memory
+    activeUsers.set(socket.id, {
+      userId: userId,
+      role: userRole
+    });
+
+    // 4. Broadcast the new count
+    broadcastLiveStats(io);
 
     socket.on("disconnect", () => {
-      if (userId) console.log(`User disconnected from socket: ${userId}`);
+      console.log(`🚨 User Disconnected from Bootstrap: ${userId || socket.id}`);
+      activeUsers.delete(socket.id);
+      broadcastLiveStats(io);
     });
   });
+  setInterval(() => {
+      broadcastLiveStats(io);
+  }, 3000);
+  // -----------------------------------
 
   initializeStudyGroupSockets(io);
 
