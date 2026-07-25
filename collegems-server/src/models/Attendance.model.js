@@ -140,12 +140,11 @@ attendanceSchema.statics.getAttendanceStats = function(courseId, startDate, endD
         }
     ]);
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // EXPORTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default mongoose.model("Attendance", attendanceSchema);
+export default mongoose.models.Attendance || mongoose.model("Attendance", attendanceSchema);
 
 // Re-export utilities for backward compatibility
 export { isValidDateFormat, isValidDateRange } from "../utils/dateValidators.js";
