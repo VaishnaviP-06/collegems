@@ -58,7 +58,7 @@ import { UserRole } from "./constants/role.constants";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 import RoleRoute from "./routes/RoleRoute";
-
+import { Toaster } from 'react-hot-toast';
 // Define Guarded Components
 const StudentDashboardGuarded = withRoleGuard(StudentDashboard, { allowedRoles: UserRole.STUDENT });
 const ExaminationFormPageGuarded = withRoleGuard(ExaminationFormPage, { allowedRoles: UserRole.STUDENT });
@@ -94,6 +94,7 @@ export default function App() {
       
       {/* 🔴 ADD THIS LINE RIGHT HERE 🔴 */}
       <GlobalPageTracker />
+      <Toaster position="bottom-right" />
       <Routes>
 <Route path="/test-toasts" element={<ToastTest />} />
 
