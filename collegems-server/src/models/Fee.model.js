@@ -13,6 +13,13 @@ const installmentSchema = new mongoose.Schema({
   idempotencyKey: {
     type: String,
   },
+  paidOn: {
+    type: Date,
+    default: Date.now,
+  },
+  idempotencyKey: {
+    type: String,
+  },
   // Payments submitted by a student/parent start as "pending" and only
   // count toward `paid` once a staff member (hod) confirms them - see
   // POST /api/fee/pay vs POST /api/fee/installments/:feeId/:installmentId/confirm.

@@ -1,29 +1,6 @@
 import mongoose from "mongoose";
 import snapshotPlugin from "../plugins/snapshotPlugin.js";
-
-function isValidDateFormat(dateString) {
-    if (!dateString || typeof dateString !== 'string') return false;
-    
-    const regex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!regex.test(dateString)) return false;
-    
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    
-    return date.getFullYear() === year &&
-           date.getMonth() === month - 1 &&
-           date.getDate() === day;
-}
-
-function isValidDateRange(dateString) {
-    if (!isValidDateFormat(dateString)) return false;
-    
-    const date = new Date(dateString);
-    const minDate = new Date('2000-01-01');
-    const maxDate = new Date('2100-12-31');
-    
-    return date >= minDate && date <= maxDate;
-}
+import { isValidDateFormat, isValidDateRange, isValidDate, formatDate } from "../utils/dateValidators.js";
 
 const attendanceSchema = new mongoose.Schema(
   {
@@ -42,16 +19,32 @@ const attendanceSchema = new mongoose.Schema(
       required: [true, 'Date is required'],
       validate: {
         validator: function(value) {
-          return isValidDateFormat(value) && isValidDateRange(value);
+          // Use imported isValidDate with options
+          const result = isValidDate(value, {
+            minDate: '2000-01-01',
+            maxDate: '2100-12-31'
+          });
+          return result.valid;
         },
         message: function(props) {
           const value = props.value;
+          const result = isValidDate(value, {
+            minDate: '2000-01-01',
+            maxDate: '2100-12-31'
+          });
+          
+          if (!result.valid) {
+            return result.error || 'Invalid date format';
+          }
+          
           if (!isValidDateFormat(value)) {
             return 'Date must be in YYYY-MM-DD format (e.g., 2024-01-01)';
           }
+          
           if (!isValidDateRange(value)) {
             return 'Date must be between 2000-01-01 and 2100-12-31';
           }
+          
           return 'Invalid date format';
         }
       }
@@ -68,6 +61,10 @@ const attendanceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// INDEXES
+// ─────────────────────────────────────────────────────────────────────────────
+
 attendanceSchema.index(
   { student: 1, course: 1, date: 1 },
   { unique: true }
@@ -76,23 +73,62 @@ attendanceSchema.index(
 attendanceSchema.index({ course: 1, date: -1 });
 attendanceSchema.index({ student: 1, date: -1 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PLUGINS
+// ─────────────────────────────────────────────────────────────────────────────
+
 attendanceSchema.plugin(snapshotPlugin);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STATIC METHODS
+// ─────────────────────────────────────────────────────────────────────────────
+
 attendanceSchema.statics.getAttendanceByDate = function(courseId, date) {
+    // Validate date using imported utility
+    if (!isValidDateFormat(date)) {
+        throw new Error('Invalid date format. Use YYYY-MM-DD');
+    }
     return this.find({ course: courseId, date });
 };
 
 attendanceSchema.statics.getAttendanceByStudent = function(studentId, startDate, endDate) {
     const query = { student: studentId };
-    if (startDate) query.date = { $gte: startDate };
-    if (endDate) query.date = { ...query.date, $lte: endDate };
+    
+    // Validate dates using imported utilities
+    if (startDate) {
+        if (!isValidDateFormat(startDate)) {
+            throw new Error('Invalid startDate format. Use YYYY-MM-DD');
+        }
+        query.date = { $gte: startDate };
+    }
+    
+    if (endDate) {
+        if (!isValidDateFormat(endDate)) {
+            throw new Error('Invalid endDate format. Use YYYY-MM-DD');
+        }
+        query.date = { ...query.date, $lte: endDate };
+    }
+    
     return this.find(query);
 };
 
 attendanceSchema.statics.getAttendanceStats = function(courseId, startDate, endDate) {
     const query = { course: courseId };
-    if (startDate) query.date = { $gte: startDate };
-    if (endDate) query.date = { ...query.date, $lte: endDate };
+    
+    // Validate dates using imported utilities
+    if (startDate) {
+        if (!isValidDateFormat(startDate)) {
+            throw new Error('Invalid startDate format. Use YYYY-MM-DD');
+        }
+        query.date = { $gte: startDate };
+    }
+    
+    if (endDate) {
+        if (!isValidDateFormat(endDate)) {
+            throw new Error('Invalid endDate format. Use YYYY-MM-DD');
+        }
+        query.date = { ...query.date, $lte: endDate };
+    }
     
     return this.aggregate([
         { $match: query },
@@ -104,7 +140,11 @@ attendanceSchema.statics.getAttendanceStats = function(courseId, startDate, endD
         }
     ]);
 };
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORTS
+// ─────────────────────────────────────────────────────────────────────────────
 
-export default mongoose.model("Attendance", attendanceSchema);
+export default mongoose.models.Attendance || mongoose.model("Attendance", attendanceSchema);
 
-export { isValidDateFormat, isValidDateRange };
+// Re-export utilities for backward compatibility
+export { isValidDateFormat, isValidDateRange } from "../utils/dateValidators.js";

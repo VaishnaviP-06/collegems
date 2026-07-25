@@ -13,11 +13,10 @@ const router = express.Router();
 router.post('/track-visit', protect, trackPageVisit);
 
 // Get page visit metrics (admin/hod only)
-// ⚠️ Removed the [] around "admin", "hod"
+// Get page visit metrics (admin/hod only)
 router.get('/page-visits', protect, authorize("admin", "hod"), getPageVisitMetrics);
 
 // Get visits by role (admin/hod only)
-// ⚠️ Removed the [] around "admin", "hod"
 router.get('/visits-by-role', protect, authorize("admin", "hod"), getVisitsByRole);
 
 export default router;
