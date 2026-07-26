@@ -51,7 +51,7 @@ import DataTableDemo from "./pages/DataTableDemo";
 
 import { PwaManager } from "./components/PwaManager";
 import ToastTest from "./pages/ToastTest";
-
+import GlobalPageTracker from "./components/GlobalPageTracker";
 // New Route Guard imports
 import withRoleGuard from "./hocs/withRoleGuard";
 import { UserRole } from "./constants/role.constants";
@@ -91,6 +91,9 @@ export default function App() {
         console.log("Committing changes:", changes);
         await new Promise(resolve => setTimeout(resolve, 1000));
       }} />
+      
+      {/* 🔴 ADD THIS LINE RIGHT HERE 🔴 */}
+      <GlobalPageTracker />
       <Routes>
 <Route path="/test-toasts" element={<ToastTest />} />
 
