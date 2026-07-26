@@ -15,9 +15,10 @@ import {
   Eye,
   CheckCircle,
   Download,
+  Trash2,
 } from "lucide-react";
 import api from "../api/axios";
-
+import { handleDeleteWithUndo } from "../utils/toastActions";
 const BACKEND_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 import AssignmentComments from "../common-components-management/AssignmentComments";
 import RichTextEditor from "../common-components-management/RichTExtEditor";
@@ -27,7 +28,9 @@ import {
   fetchTeacherAssignments,
   createAssignment,
   evaluateAssignment,
-  clearError
+  clearError,
+  removeAssignmentOptimistically, // <-- ADDED
+  restoreAssignmentOptimistically // <-- ADDED
 } from "../store/slices/assignmentSlice";
 
 export default function TeacherAssignments({ courseId }: { courseId: string }) {
@@ -184,7 +187,23 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
       setGradingId(null);
     }
   };
-
+const handleDeleteAssignment = (assignmentToDelete: any) => {
+    handleDeleteWithUndo(
+      assignmentToDelete._id,
+      
+      // ❌ REMOVE THE "s" HERE
+      (id) => api.delete(`/assignment/${id}`), 
+      
+      // ❌ REMOVE THE "s" HERE (and ensure it matches your backend structure)
+      (id) => api.put(`/assignment/restore/${id}`), 
+      
+      // Instantly remove from Redux UI
+      (id) => dispatch(removeAssignmentOptimistically(id)),
+      
+      // Put it back in Redux UI if undone
+      () => dispatch(restoreAssignmentOptimistically(assignmentToDelete))
+    );
+  };
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -552,11 +571,12 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
                   ? new Date(assignment.dueDate)
                   : null;
                 const isActive = dueDate ? dueDate >= new Date() : false;
-                return (
+return (
                   <div
                     key={assignment._id || assignment.title}
                     className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
                   >
+                    {/* === LEFT SIDE: Icon, Title, and Date === */}
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-50 rounded-lg">
                         <FileText className="w-4 h-4 text-blue-600" />
@@ -575,6 +595,8 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
                         </p>
                       </div>
                     </div>
+
+                    {/* === RIGHT SIDE: Badges and Buttons === */}
                     <div className="flex items-center gap-3">
                       <span
                         className={`text-xs px-2 py-1 rounded-full border ${
@@ -593,6 +615,14 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
                       >
                         <Eye className="w-4 h-4" /> View
                       </button>
+
+                      <button 
+                        onClick={() => handleDeleteAssignment(assignment)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
+                        title="Delete Assignment"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </button>
                     </div>
                   </div>
                 );
@@ -600,6 +630,7 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
           )}
         </div>
       </div>
+      
 
       {/* ========================================================================
         SPLIT LAYOUT WITH COMMENTS INTEGRATION 

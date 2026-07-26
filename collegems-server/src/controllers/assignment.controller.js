@@ -286,8 +286,9 @@ export const getUpcomingAssignments = async (req, res) => {
   try {
     const studentId = req.user.id;
 
-    // Fetch all assignments and populate course name
-    const all = await Assignment.find()
+    // 🔴 ADD THIS FILTER: { isDeleted: { $ne: true } }
+    // Fetch all active assignments and populate course name
+    const all = await Assignment.find({ isDeleted: { $ne: true } })
       .populate("course", "name code")
       .populate("teacher", "name")
       .lean();
@@ -362,8 +363,11 @@ export const getTeacherAssignments = async (req, res) => {
   try {
     const teacherId = req.user.id;
 
-    // Fetch all assignments created by this teacher
-    const assignments = await Assignment.find({ teacher: teacherId })
+    // UPDATE: Add { isDeleted: { $ne: true } } to the query
+    const assignments = await Assignment.find({ 
+      teacher: teacherId, 
+      isDeleted: { $ne: true } // 🔴 Filters out deleted assignments
+    })
       .populate("course", "name code")
       .populate("submissions.student", "name email avatarUrl photo")
       .populate("comments.user", "name role avatarUrl photo") 
@@ -516,5 +520,62 @@ export const addAssignmentComment = async (req, res) => {
     console.error("Error adding comment:", error);
     if (error.status === 403) return res.status(403).json({ message: error.message });
     res.status(500).json({ message: "Failed to add comment" });
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+// SOFT DELETE & RESTORE ASSIGNMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const deleteAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate Assignment ID
+    const assignmentValidation = validateAssignmentId(id);
+    if (!assignmentValidation.valid) {
+      return res.status(400).json({ message: assignmentValidation.error });
+    }
+
+    const deletedAssignment = await Assignment.findByIdAndUpdate(
+      assignmentValidation.value, 
+      { isDeleted: true }, // Soft delete flag
+      { new: true }
+    );
+
+    if (!deletedAssignment) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    res.status(200).json({ message: "Assignment deleted successfully", assignment: deletedAssignment });
+  } catch (error) {
+    console.error("Delete Assignment Error:", error);
+    res.status(500).json({ message: "Server error during deletion" });
+  }
+};
+
+export const restoreAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate Assignment ID
+    const assignmentValidation = validateAssignmentId(id);
+    if (!assignmentValidation.valid) {
+      return res.status(400).json({ message: assignmentValidation.error });
+    }
+
+    const restoredAssignment = await Assignment.findByIdAndUpdate(
+      assignmentValidation.value, 
+      { isDeleted: false }, // Remove soft delete flag
+      { new: true }
+    );
+
+    if (!restoredAssignment) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    res.status(200).json({ message: "Assignment restored successfully", assignment: restoredAssignment });
+  } catch (error) {
+    console.error("Restore Assignment Error:", error);
+    res.status(500).json({ message: "Server error during restoration" });
   }
 };
