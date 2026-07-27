@@ -48,7 +48,7 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [editedMarks, setEditedMarks] = useState<Record<string, string>>({});
   const [gradingId, setGradingId] = useState<string | null>(null);
-  
+  const [searchQuery, setSearchQuery] = useState("");
   // <-- ADDED THIS: State for the document viewer modal
   const [viewerData, setViewerData] = useState<{
     isOpen: boolean;
@@ -72,7 +72,15 @@ export default function TeacherAssignments({ courseId }: { courseId: string }) {
   useEffect(() => {
     dispatch(fetchTeacherAssignments());
   }, [courseId, dispatch]);
-
+// 2. Add the filtering logic
+  const filteredAssignments = assignments.filter((assignment) => {
+    const titleLower = (assignment?.title || "").toLowerCase();
+    const searchLower = (searchQuery || "").toLowerCase();
+    
+    return titleLower.includes(searchLower);
+  });
+  
+  
   const handleCreateAssignment = async () => {
     if (!hasCourseId) {
       setLocalError("Select a course before creating an assignment.");
@@ -536,7 +544,7 @@ const handleDeleteAssignment = (assignmentToDelete: any) => {
         </div>
       )}
 
-      {/* Recent Assignments Preview */}
+    {/* Recent Assignments Preview */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900">Recent Assignments</h3>
@@ -544,23 +552,27 @@ const handleDeleteAssignment = (assignmentToDelete: any) => {
             View all
           </button>
         </div>
-        <div className="space-y-3">
-          {assignments.length === 0 ? (
+        
+        {/* ADDED: The Search Bar */}
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search assignments by title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+<div className="space-y-3">
+          {/* Changed assignments to filteredAssignments */}
+          {filteredAssignments.length === 0 ? (
             <div className="flex flex-col items-center py-6 text-center">
-              <FileText className="w-8 h-8 text-gray-300 mb-2" />
-              <p className="text-sm text-gray-500">No assignments yet</p>
-              {hasCourseId && (
-                <button
-                  onClick={() => setOpen(true)}
-                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Create First Assignment
-                </button>
-              )}
+              {/* ... empty state ... */}
             </div>
           ) : (
-            [...assignments]
+            /* Changed assignments to filteredAssignments */
+            [...filteredAssignments]
               .sort((a, b) => {
                 const aTime = new Date(a.createdAt || a.dueDate || 0).getTime();
                 const bTime = new Date(b.createdAt || b.dueDate || 0).getTime();
