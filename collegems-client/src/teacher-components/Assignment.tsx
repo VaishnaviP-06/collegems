@@ -696,43 +696,60 @@ return (
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {viewingSubmissions.submissions.map((sub: any, idx: number) => {
-                          
-                          // Helper to construct secure file URL
-                          const getFileUrl = () => {
-                            if (!sub.file || !sub.file.url) return "";
-                            return sub.file.url.startsWith("http") 
-                                ? `${sub.file.url}?token=${localStorage.getItem("token")}` 
-                                : `http://localhost:5000${sub.file.url}?token=${localStorage.getItem("token")}`;
-                          };
+                     {viewingSubmissions.submissions.map((sub: any, idx: number) => {
+    
+    // 1. Calculate if the submission is late
+    const isLate = viewingSubmissions.dueDate && sub.submittedAt 
+      ? new Date(sub.submittedAt) > new Date(viewingSubmissions.dueDate)
+      : false;
 
-                          return (
-                          <div key={idx} className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-                            <div className="flex items-start justify-between flex-wrap gap-4">
-                              <div className="flex items-center gap-4 min-w-[200px]">
-                                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold overflow-hidden">
-                                  {sub.student?.avatarUrl || sub.student?.photo ? (
-                                    <img src={sub.student.avatarUrl || sub.student.photo} alt={sub.student?.name} className="w-full h-full object-cover" />
-                                  ) : sub.student?.name?.charAt(0).toUpperCase() || "S"}
-                                </div>
-                                <div>
-                                 <p className="font-semibold text-gray-900 flex items-center">
-                                 {sub.student?.name || "Unknown Student"}
-                                    </p>
-                                  <p className="text-sm text-gray-500">{sub.student?.email || "No email"}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-col items-end min-w-[150px]">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${sub.status === 'graded' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                                  {sub.status === 'graded' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                                  {sub.status === 'graded' ? 'Graded' : 'Submitted'}
-                                </span>
-                                <p className="text-xs text-gray-500 mt-2">
-                                  {new Date(sub.submittedAt).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
+    // Helper to construct secure file URL
+    const getFileUrl = () => {
+      if (!sub.file || !sub.file.url) return "";
+      return sub.file.url.startsWith("http") 
+          ? `${sub.file.url}?token=${localStorage.getItem("token")}` 
+          : `${BACKEND_ORIGIN}${sub.file.url}?token=${localStorage.getItem("token")}`;
+    };
+
+    return (
+    <div key={idx} className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4 min-w-[200px]">
+          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold overflow-hidden">
+            {sub.student?.avatarUrl || sub.student?.photo ? (
+              <img src={sub.student.avatarUrl || sub.student.photo} alt={sub.student?.name} className="w-full h-full object-cover" />
+            ) : sub.student?.name?.charAt(0).toUpperCase() || "S"}
+          </div>
+          <div>
+           <p className="font-semibold text-gray-900 flex items-center">
+           {sub.student?.name || "Unknown Student"}
+              </p>
+            <p className="text-sm text-gray-500">{sub.student?.email || "No email"}</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-end min-w-[150px]">
+          {/* 2. Added a wrapper div to hold both badges side-by-side */}
+          <div className="flex items-center gap-2">
+            {/* Added the red Late badge */}
+            {isLate && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                Late
+              </span>
+            )}
+            
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${sub.status === 'graded' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+              {sub.status === 'graded' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+              {sub.status === 'graded' ? 'Graded' : 'Submitted'}
+            </span>
+          </div>
+          
+          {/* Changed the date text color to red if it's late to make it extra obvious */}
+          <p className={`text-xs mt-2 ${isLate ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+            {new Date(sub.submittedAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
                             
                             <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
                               {(sub.textResponse || sub.link) && (
