@@ -1,5 +1,5 @@
 // index.js or server.js
-
+console.log("🚨🚨🚨 HELLO! THE SERVER IS ACTUALLY USING THIS FILE! 🚨🚨🚨");
 import dotenv from "dotenv";
 dotenv.config();
 
