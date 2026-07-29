@@ -7,4 +7,4 @@ export const DEFAULT_ACADEMIC_LABELS = Object.freeze({
   subject: "Subject",
   batch: "Batch",
   section: "Section",
-});
+} as const);

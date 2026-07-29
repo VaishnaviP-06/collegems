@@ -23,8 +23,11 @@ import { useTheme } from "../context/ThemeContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { RecentHistorySection } from "../components/RecentHistorySection";
+import { getAcademicLabel } from "../utils/academicLabels";
+import { useAcademicLabels } from "../hooks/useAcademicLabels";
 
 export default function MainDashboard() {
+  const { data: academicLabels } = useAcademicLabels();
   const navigate = useNavigate();
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [searchTerm] = useState("");
@@ -38,7 +41,7 @@ export default function MainDashboard() {
       title: "Academic Results",
       description: "View your semester grades and performance",
       icon: FileText,
-      count: "4 Subjects",
+      count: `4 ${getAcademicLabel("subject", academicLabels)}s`,
       color: "blue",
       route: "/results",
     },
@@ -53,7 +56,7 @@ export default function MainDashboard() {
     },
     {
       id: 3,
-      title: "Course Catalog",
+      title: `${getAcademicLabel("course", academicLabels)} Catalog`,
       description: "Browse and manage your enrolled courses",
       icon: BookOpen,
       count: "6 Enrolled",
@@ -80,7 +83,7 @@ export default function MainDashboard() {
     },
     {
       id: 6,
-      title: "Faculty Directory",
+      title: `${getAcademicLabel("faculty", academicLabels)} Directory`,
       description: "Connect with your professors",
       icon: Users,
       count: "12 Teachers",
@@ -222,7 +225,7 @@ export default function MainDashboard() {
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              Welcome back, Student! Here's your academic overview
+              Welcome back, {getAcademicLabel("student", academicLabels)}! Here's your academic overview
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
               Here's your academic overview and upcoming activities
